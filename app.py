@@ -1,0 +1,68 @@
+from flask import (
+    Flask,
+    jsonify
+)
+import hashlib
+import hmac
+import json
+import logging
+import time
+import uuid
+
+import requests
+
+app = Flask(__name__)
+
+
+SUMSUB_SECRET_KEY = "mlRROMytYUEfPrs7t5Vhst91JcoR1WMm"  
+SUMSUB_APP_TOKEN = "sbx:ynUYeBx03l7ELFXj4K02Dn75.w0yiLJUkVZUakSDcOtKvw2zsERe0Sze4"  
+SUMSUB_TEST_BASE_URL = "https://api.sumsub.com"
+REQUEST_TIMEOUT = 60
+
+def sign_request(request: requests.Request) -> requests.PreparedRequest:
+    prepared_request = request.prepare()
+    now = int(time.time())
+    method = request.method.upper()
+    path_url = prepared_request.path_url  # includes encoded query params
+    # could be None so we use an empty **byte** string here
+    body = b'' if prepared_request.body is None else prepared_request.body
+    if type(body) == str:
+        body = body.encode('utf-8')
+    data_to_sign = str(now).encode('utf-8') + method.encode('utf-8') + path_url.encode('utf-8') + body
+    # hmac needs bytes
+    signature = hmac.new(
+        SUMSUB_SECRET_KEY.encode('utf-8'),
+        data_to_sign,
+        digestmod=hashlib.sha256
+    )
+    prepared_request.headers['X-App-Token'] = SUMSUB_APP_TOKEN
+    prepared_request.headers['X-App-Access-Ts'] = str(now)
+    prepared_request.headers['X-App-Access-Sig'] = signature.hexdigest()
+    return prepared_request
+
+
+
+def get_access_token(external_user_id, level_name):
+    # https://developers.sumsub.com/api-reference/#access-tokens-for-sdks
+    params = {'userId': external_user_id, 'ttlInSecs': '600', 'levelName': level_name}
+    headers = {'Content-Type': 'application/json',
+               'Content-Encoding': 'utf-8'
+               }
+    resp = sign_request(requests.Request('POST', SUMSUB_TEST_BASE_URL + '/resources/accessTokens',
+                                         params=params,
+                                         headers=headers))
+    s = requests.Session()
+    response = s.send(resp, timeout=REQUEST_TIMEOUT)
+    token = (response.json()['token'])
+
+    return token
+
+@app.route('/<key>')
+def return_access_token(key):
+    print()
+    return "hello"
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+

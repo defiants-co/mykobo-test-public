@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="transfer_step">
+        <input id="stellar_key" type="text" placeholder="Stellar Public Key">
+        <input id="transfer_amount" type='number' placeholder="transfer amount">
+        <button id="check_kyc">submit</button>
+    </div>
+    <p id="status"></p>
+    <div id="kyc_step">
+        <input type="email" placeholder="email" id="email">
+        <input type="tel" placeholder="phone number" id="tel">
+        <button id="kyc_details">submit</button>
+    </div>
+    <div id="sumsub-websdk-container"></div>
+</body>
+<script src = "https://static.sumsub.com/idensic/static/sns-websdk-builder.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.2/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/10.4.0/stellar-sdk.min.js" ></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.1/axios.min.js"></script>
+<script>
+
+const config = {
+    limit : 1000,
+    access_token : "ac05fe62-74ae-42e6-a5e1-ff64a1a7e486"
+}
+
+const transfer_amount = $("#transfer_amount")
+const status_field = $("#status")
+
+$(document).ready(function(){
+    $("#kyc_step").hide()
+})
+
+$("#check_kyc").click(function(){
+    amount = Number(transfer_amount.val())
+    if (amount >= config.limit){
+        status_field.html('Transfer amount over limit. Beginning KYC process.')
+        $("#kyc_step").show()
+        $("#transfer_step").hide()
+    }
+})
+
+$("#kyc_details").click(function(){
+    email = $("#email").val()
+    phone = $("#tel").val()
+    stellar_key = $("#stellar_key").val()
+    console.log(email,phone)
+    status_field.html("Starting KYC Check")
+    console.log(getNewAccessToken(stellar_key))
+
+})
+
+function launchWebSdk(accessToken, applicantEmail, applicantPhone, stellar_key) {
+    let snsWebSdkInstance = snsWebSdk.init(
+            accessToken,
+            // token update callback, must return Promise
+            // Access token expired
+            // get a new one and pass it to the callback to re-initiate the WebSDK
+            () => this.getNewAccessToken(stellar_key)
+        )
+        .withConf({
+            lang: 'en', //language of WebSDK texts and comments (ISO 639-1 format)
+            email: applicantEmail,
+            phone: applicantPhone,
+        })
+        .withOptions({ addViewportTag: false, adaptIframeHeight: true})
+        // see below what kind of messages WebSDK generates
+        .on('idCheck.stepCompleted', (payload) => {
+            console.log('stepCompleted', payload)
+        })
+        .on('idCheck.onError', (error) => {
+            console.log('onError', error)
+        })
+        .build();
+
+    // you are ready to go:
+    // just launch the WebSDK by providing the container element for it
+    snsWebSdkInstance.launch('#sumsub-websdk-container')
+}
+async function getNewAccessToken(stellar_key) {
+    await axios.post(
+        'http://localhost:5000/',
+        {"key" : stellar_key}
+        ).then(function(response){
+            console.log(response)
+        return response.data
+    })
+}
+</script>
+</html>
