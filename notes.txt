@@ -1,0 +1,12 @@
+Regarding Withdrawal/Deposit initialization:
+  - Requires user to sign valid challenge (SEP10) transaction.
+  - Requires creation of Transfer object on backend, for tracking status updates, and redirecting KYC if necessary.
+  - Frontend must be able to show these changes as it relates to internal logic on transfer status (does transaction require KYC), in context of the individual transfer
+  
+  
+Regarding Testnet wallet workflow:
+  - Testnet anchor registers wallet as a user
+  - Testnet anchor registers new transfer request with the anchor
+  - Testnet anchor redirects to KYC server if required
+  - Transfer is either greenlit or rejected depending on KYC status from SumSub webhook (I assume?)
+  - Funds are then released to or accepted from the user if transfer is valid, transfer marked as completed. 
