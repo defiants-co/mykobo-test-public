@@ -1,6 +1,8 @@
 from flask import (
     Flask,
-    jsonify
+    jsonify,
+    render_template,
+    request
 )
 from flask_cors import (
     CORS,
@@ -68,6 +70,11 @@ def return_access_token(key):
     return jsonify({
         "access_token" : access_token
     })
+
+@app.route('/')
+def index():
+    
+    return render_template('app.html')
 
 
 if __name__ == "__main__":

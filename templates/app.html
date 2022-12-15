@@ -28,7 +28,6 @@
 
 const config = {
     limit : 1000,
-    access_token : "ac05fe62-74ae-42e6-a5e1-ff64a1a7e486"
 }
 
 const transfer_amount = $("#transfer_amount")
@@ -53,11 +52,12 @@ $("#kyc_details").click(async function(){
     stellar_key = $("#stellar_key").val()
     console.log(email,phone)
     status_field.html("Starting KYC Check")
+    $("#kyc_step").hide()
     launchWebSdk(
-        await getNewAccessToken(stellar_key),
-        email,
-        phone,
-        stellar_key
+    await getNewAccessToken(stellar_key),
+    email,
+    phone,
+    stellar_key
     )
 
 })
