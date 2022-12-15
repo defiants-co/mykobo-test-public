@@ -19,9 +19,12 @@ import requests
 
 app = Flask(__name__)
 
+config = json.load(
+    open('config.json')
+)
 
-SUMSUB_SECRET_KEY = "mlRROMytYUEfPrs7t5Vhst91JcoR1WMm"  
-SUMSUB_APP_TOKEN = "sbx:ynUYeBx03l7ELFXj4K02Dn75.w0yiLJUkVZUakSDcOtKvw2zsERe0Sze4"  
+SUMSUB_SECRET_KEY = config['SECRET']
+SUMSUB_APP_TOKEN = config['APP_TOKEN']  
 SUMSUB_TEST_BASE_URL = "https://api.sumsub.com"
 REQUEST_TIMEOUT = 60
 
@@ -70,6 +73,8 @@ def return_access_token(key):
     return jsonify({
         "access_token" : access_token
     })
+
+# In a real environment, there would be a transaction_id, that denotes the deposit in question, and a signed JWT from a challenge transaction to authenticate the user. Then, amounts, withdrawal requests, SEP12 and SEP24 workflows are processed.
 
 @app.route('/')
 def index():
