@@ -2,6 +2,10 @@ from flask import (
     Flask,
     jsonify
 )
+from flask_cors import (
+    CORS,
+    cross_origin
+)
 import hashlib
 import hmac
 import json
@@ -58,9 +62,12 @@ def get_access_token(external_user_id, level_name):
     return token
 
 @app.route('/<key>')
+@cross_origin()
 def return_access_token(key):
-    print()
-    return "hello"
+    access_token = get_access_token(key,'basic-kyc-level')
+    return jsonify({
+        "access_token" : access_token
+    })
 
 
 if __name__ == "__main__":

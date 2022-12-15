@@ -47,13 +47,18 @@ $("#check_kyc").click(function(){
     }
 })
 
-$("#kyc_details").click(function(){
+$("#kyc_details").click(async function(){
     email = $("#email").val()
     phone = $("#tel").val()
     stellar_key = $("#stellar_key").val()
     console.log(email,phone)
     status_field.html("Starting KYC Check")
-    console.log(getNewAccessToken(stellar_key))
+    launchWebSdk(
+        await getNewAccessToken(stellar_key),
+        email,
+        phone,
+        stellar_key
+    )
 
 })
 
@@ -63,7 +68,7 @@ function launchWebSdk(accessToken, applicantEmail, applicantPhone, stellar_key) 
             // token update callback, must return Promise
             // Access token expired
             // get a new one and pass it to the callback to re-initiate the WebSDK
-            () => this.getNewAccessToken(stellar_key)
+            () =>  this.getNewAccessToken(stellar_key)
         )
         .withConf({
             lang: 'en', //language of WebSDK texts and comments (ISO 639-1 format)
@@ -85,13 +90,8 @@ function launchWebSdk(accessToken, applicantEmail, applicantPhone, stellar_key) 
     snsWebSdkInstance.launch('#sumsub-websdk-container')
 }
 async function getNewAccessToken(stellar_key) {
-    await axios.post(
-        'http://localhost:5000/',
-        {"key" : stellar_key}
-        ).then(function(response){
-            console.log(response)
-        return response.data
-    })
+    const request =  await axios.get('http://localhost:5000/' + stellar_key)
+    return request.data.access_token
 }
 </script>
 </html>
