@@ -7,11 +7,6 @@
     <title>Document</title>
 </head>
 <body>
-    <div id="transfer_step">
-        <input id="stellar_key" type="text" placeholder="Stellar Public Key">
-        <input id="transfer_amount" type='number' placeholder="transfer amount">
-        <button id="check_kyc">submit</button>
-    </div>
     <p id="status"></p>
     <div id="kyc_step">
         <input type="email" placeholder="email" id="email">
@@ -29,22 +24,7 @@
 const config = {
     limit : 1000,
 }
-
-const transfer_amount = $("#transfer_amount")
 const status_field = $("#status")
-
-$(document).ready(function(){
-    $("#kyc_step").hide()
-})
-
-$("#check_kyc").click(function(){
-    amount = Number(transfer_amount.val())
-    if (amount >= config.limit){
-        status_field.html('Transfer amount over limit. Beginning KYC process.')
-        $("#kyc_step").show()
-        $("#transfer_step").hide()
-    }
-})
 
 $("#kyc_details").click(async function(){
     email = $("#email").val()

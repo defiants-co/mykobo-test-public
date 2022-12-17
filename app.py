@@ -2,7 +2,8 @@ from flask import (
     Flask,
     jsonify,
     render_template,
-    request
+    request,
+    redirect
 )
 from flask_cors import (
     CORS,
@@ -78,9 +79,15 @@ def return_access_token(key):
 
 @app.route('/')
 def index():
-    
-    return render_template('app.html')
+    return redirect('/create_transfer')
 
+@app.route('/create_transfer')
+def create_transfer():
+    return render_template('init_workflow.html')
+
+@app.route('/kyc')
+def kyc():
+    return render_template('kyc_workflow.html')
 
 if __name__ == "__main__":
     app.run(debug=True)

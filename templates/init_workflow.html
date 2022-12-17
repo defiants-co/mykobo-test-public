@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <a href="/kyc"> view sumsub KYC workflow example</a><br><br>
+    <b id="status">...</b><br><br>
+    <div id="auth_step">
+        <label for="secret_key">Secret Key</label><br><br>
+        <input id="secret_key" placeholder="SBEXAMPLEHIOD..." type="text"><br><br>
+        <button onclick="authorize_customer()" id="auth_submit_button">submit</button>
+    </div>
+    <div id="transfer_config">
+        <label for="transfer_amount">EURC to transfer</label><br><br>
+        <input id="transfer_amount" placeholder="1" type="number"><br><br>
+        <button onclick="begin_transfer('withdraw')" id="transfer_config_button_1">withdraw</button>
+        <!-- <button onclick="begin_transfer('deposit')" id="transfer_config_button_2">deposit</button> -->
+    </div>
+</body>
+<script src = "https://static.sumsub.com/idensic/static/sns-websdk-builder.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.2/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/10.4.0/stellar-sdk.min.js" ></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.1/axios.min.js"></script>
+<script>
+
+    config = {
+        web_auth_server : "https://dev.anchor.mykobo.co/auth",
+        transfer_server_sep6 : "https://dev.anchor.mykobo.co/sep6",
+        transfer_server_sep24 : "https://dev.anchor.mykobo.co/sep24",
+        limit : 1000
+    }
+    var authorization_token = null
+    const status_field = $("#status")
+
+    $(document).ready(function(){
+        $("#transfer_config").hide()
+    })
+
+    async function authorize_customer(){
+        const secret_key = $("#secret_key").val()
+        if (secret_key.length == 56 && secret_key[0] === "S"){
+            $("#auth_submit_button").hide()
+            const keypair = StellarSdk.Keypair.fromSecret(secret_key)
+            status_field.html("Fetching challenge transaction from web_auth_server...")
+            await axios.get(`${config.web_auth_server}?account=${keypair.publicKey()}`).then(async function(challenge_response){
+                status_field.html("Signing challenge transaction with provided secret key...")
+                raw_xdr = challenge_response.data.transaction
+                network_passphrase = challenge_response.data.network_passphrase
+                transaction = StellarSdk.TransactionBuilder.fromXDR(raw_xdr,network_passphrase)
+                transaction.sign(keypair)
+                signed_xdr = transaction.toXDR()
+                status_field.html("Submitting signed challenge transaction to web_auth_server...")
+                await axios.post(`${config.web_auth_server}?account=${keypair.publicKey()}`,{"transaction" : signed_xdr}).then(async function(token_response){
+                    authorization_token = token_response.data.token
+                    status_field.html("Successfully fetched authorization token!")
+                    $("#auth_step").hide()
+                    $("#transfer_config").show()
+                }
+
+                )
+            })
+        }
+        else{
+            status_field.html("ERROR: Bad Secret Key!")
+        }
+    }
+    async function begin_transfer(action){
+        console.log(authorization_token)
+        const transfer_amount = $("#transfer_amount")
+        if(action != "deposit" || action != "withdraw"){
+        if(Number(transfer_amount.val()) > 0){
+            if (Number(transfer_amount.val()) >= config.limit){
+                $("#transfer_config_button_1").hide()
+                // $("#transfer_config_button_2").hide()
+                
+                await axios.post(
+                    `${config.transfer_server_sep24}/transactions/withdraw/interactive`,
+                    {"asset_code" : "EURC"},
+                    {headers : {
+                        "Authorization" : `Bearer ${authorization_token}`
+                    }}
+                    ).then(function(transfer_interactive_response){
+                        window.location.href = transfer_interactive_response.data.url
+                    })
+            }
+            else{
+                status_field.html('Transfers this low are not yet supported!')
+            }
+        }
+        else{
+            status_field.html("ERROR: transfer_amount field is invalid")
+        }}
+    }
+
+</script>
+</html>
