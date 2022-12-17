@@ -2,7 +2,8 @@ from flask import (
     Flask,
     jsonify,
     render_template,
-    request
+    request,
+    redirect
 )
 from flask_cors import (
     CORS,
@@ -76,8 +77,12 @@ def return_access_token(key):
 
 # In a real environment, there would be a transaction_id, that denotes the deposit in question, and a signed JWT from a challenge transaction to authenticate the user. Then, amounts, withdrawal requests, SEP12 and SEP24 workflows are processed.
 
-@app.route('/create_transfer')
+@app.route('/')
 def index():
+    return redirect('/create_transfer')
+
+@app.route('/create_transfer')
+def create_transfer():
     return render_template('init_workflow.html')
 
 @app.route('/kyc')
