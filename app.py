@@ -76,11 +76,13 @@ def return_access_token(key):
 
 # In a real environment, there would be a transaction_id, that denotes the deposit in question, and a signed JWT from a challenge transaction to authenticate the user. Then, amounts, withdrawal requests, SEP12 and SEP24 workflows are processed.
 
-@app.route('/')
+@app.route('/create_transfer')
 def index():
-    
-    return render_template('app.html')
+    return render_template('init_workflow.html')
 
+@app.route('/kyc')
+def kyc():
+    return render_template('kyc_workflow.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
