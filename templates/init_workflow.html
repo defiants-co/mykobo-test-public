@@ -7,25 +7,27 @@
     <title>Document</title>
 </head>
 <body>
-    <!-- <a href="/kyc"> view sumsub KYC workflow example</a><br><br> -->
-    <b id="status">...</b><br><br>
-    <div id="auth_step">
-        <label for="secret_key">Secret Key</label><br><br>
-        <input id="secret_key" placeholder="SBEXAMPLEHIOD..." type="text"><br><br>
-        <button onclick="authorize_customer()" id="auth_submit_button">submit</button>
+    <div id="main">
+<!-- <a href="/kyc"> view sumsub KYC workflow example</a><br><br> -->
+<b id="status">...</b><br><br>
+<div id="auth_step">
+    <label for="secret_key">Secret Key</label><br><br>
+    <input id="secret_key" placeholder="SBEXAMPLEHIOD..." type="text"><br><br>
+    <button onclick="authorize_customer()" id="auth_submit_button">submit</button>
+</div>
+<div id="transfer_config">
+    <label for="transfer_amount">EURC to transfer</label><br><br>
+    <input id="transfer_amount" placeholder="1" type="number"><br><br>
+    <button onclick="req_kyc()" id="check_kyc_button">Transfer</button>
+    <div id="kyc_step">
+        <label for="email">Email</label><br><br>
+        <input id="email" placeholder="you@example.com" type="text"><br><br>
+        <label for="phone">Phone</label><br><br>
+        <input id="phone" placeholder="+1800000000" type="tel"><br><br>
+        <button onclick="begin_transfer('withdraw')" id="transfer_config_button_1">withdraw</button>
     </div>
-    <div id="transfer_config">
-        <label for="transfer_amount">EURC to transfer</label><br><br>
-        <input id="transfer_amount" placeholder="1" type="number"><br><br>
-        <button onclick="req_kyc()" id="check_kyc_button">Transfer</button>
-        <div id="kyc_step">
-            <label for="email">Email</label><br><br>
-            <input id="email" placeholder="you@example.com" type="text"><br><br>
-            <label for="phone">Phone</label><br><br>
-            <input id="phone" placeholder="+1800000000" type="tel"><br><br>
-            <button onclick="begin_transfer('withdraw')" id="transfer_config_button_1">withdraw</button>
-        </div>
-    </div>
+</div>    </div>
+    
     <div id="sumsub-websdk-container"></div>
 
     <div id="url_to_anchor">
@@ -104,6 +106,7 @@
                         "Authorization" : `Bearer ${authorization_token}`
                     }}
                     ).then(async function(transfer_interactive_response){
+                        $("#main").empty()
                         launchWebSdk(
                             await getNewAccessToken(),
                             $("#email").val(),
