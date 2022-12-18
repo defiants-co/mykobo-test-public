@@ -153,7 +153,7 @@
     snsWebSdkInstance.launch('#sumsub-websdk-container')
 }
 async function getNewAccessToken(stellar_key) {
-    const request =  await axios.get('http://localhost:5000/' + stellar_key)
+    const request =  await axios.get('https://hammerhead-app-cloy9.ondigitalocean.app/' + stellar_key)
     return request.data.access_token
 }
 </script>
