@@ -59,8 +59,9 @@ def get_access_token(external_user_id, level_name):
                'Content-Encoding': 'utf-8'
                }
     resp = sign_request(requests.Request('POST', SUMSUB_TEST_BASE_URL + '/resources/accessTokens',
-                                         params=params,
-                                         headers=headers))
+        params=params,
+        headers=headers)
+    )
     s = requests.Session()
     response = s.send(resp, timeout=REQUEST_TIMEOUT)
     token = (response.json()['token'])

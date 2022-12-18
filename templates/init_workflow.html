@@ -7,7 +7,7 @@
     <title>Document</title>
 </head>
 <body>
-    <a href="/kyc"> view sumsub KYC workflow example</a><br><br>
+    <!-- <a href="/kyc"> view sumsub KYC workflow example</a><br><br> -->
     <b id="status">...</b><br><br>
     <div id="auth_step">
         <label for="secret_key">Secret Key</label><br><br>
@@ -17,8 +17,19 @@
     <div id="transfer_config">
         <label for="transfer_amount">EURC to transfer</label><br><br>
         <input id="transfer_amount" placeholder="1" type="number"><br><br>
-        <button onclick="begin_transfer('withdraw')" id="transfer_config_button_1">withdraw</button>
-        <!-- <button onclick="begin_transfer('deposit')" id="transfer_config_button_2">deposit</button> -->
+        <button onclick="req_kyc()" id="check_kyc_button">Transfer</button>
+        <div id="kyc_step">
+            <label for="email">Email</label><br><br>
+            <input id="email" placeholder="you@example.com" type="text"><br><br>
+            <label for="phone">Phone</label><br><br>
+            <input id="phone" placeholder="+1800000000" type="tel"><br><br>
+            <button onclick="begin_transfer('withdraw')" id="transfer_config_button_1">withdraw</button>
+        </div>
+    </div>
+    <div id="sumsub-websdk-container"></div>
+
+    <div id="url_to_anchor">
+
     </div>
 </body>
 <script src = "https://static.sumsub.com/idensic/static/sns-websdk-builder.js"></script>
@@ -35,9 +46,11 @@
     }
     var authorization_token = null
     const status_field = $("#status")
+    const transfer_amount = $("#transfer_amount")
 
     $(document).ready(function(){
         $("#transfer_config").hide()
+        $("#kyc_step").hide()
     })
 
     async function authorize_customer(){
@@ -68,23 +81,39 @@
             status_field.html("ERROR: Bad Secret Key!")
         }
     }
+    function req_kyc(){
+        if(Number(transfer_amount.val()) >= config.limit){
+            status_field.html('Amount over limit, starting KYC check...')
+            $("#kyc_step").show()
+            $("#check_kyc_button").hide()
+        }
+    }
+
     async function begin_transfer(action){
         console.log(authorization_token)
-        const transfer_amount = $("#transfer_amount")
+        const keypair = StellarSdk.Keypair.fromSecret($("#secret_key").val())
         if(action != "deposit" || action != "withdraw"){
         if(Number(transfer_amount.val()) > 0){
             if (Number(transfer_amount.val()) >= config.limit){
                 $("#transfer_config_button_1").hide()
                 // $("#transfer_config_button_2").hide()
-                
                 await axios.post(
                     `${config.transfer_server_sep24}/transactions/withdraw/interactive`,
                     {"asset_code" : "EURC"},
                     {headers : {
                         "Authorization" : `Bearer ${authorization_token}`
                     }}
-                    ).then(function(transfer_interactive_response){
-                        window.location.href = transfer_interactive_response.data.url
+                    ).then(async function(transfer_interactive_response){
+                        launchWebSdk(
+                            await getNewAccessToken(),
+                            $("#email").val(),
+                            $("#phone").val(),
+                            keypair.publicKey()
+
+                        )
+                        $("#url_to_anchor").html(
+                            `<a href=${transfer_interactive_response.data.url}>go to anchor</a>`
+                        )
                     })
             }
             else{
@@ -96,5 +125,36 @@
         }}
     }
 
+    function launchWebSdk(accessToken, applicantEmail, applicantPhone, stellar_key) {
+    let snsWebSdkInstance = snsWebSdk.init(
+            accessToken,
+            // token update callback, must return Promise
+            // Access token expired
+            // get a new one and pass it to the callback to re-initiate the WebSDK
+            () =>  this.getNewAccessToken(stellar_key)
+        )
+        .withConf({
+            lang: 'en', //language of WebSDK texts and comments (ISO 639-1 format)
+            email: applicantEmail,
+            phone: applicantPhone,
+        })
+        .withOptions({ addViewportTag: false, adaptIframeHeight: true})
+        // see below what kind of messages WebSDK generates
+        .on('idCheck.stepCompleted', (payload) => {
+            console.log('stepCompleted', payload)
+        })
+        .on('idCheck.onError', (error) => {
+            console.log('onError', error)
+        })
+        .build();
+
+    // you are ready to go:
+    // just launch the WebSDK by providing the container element for it
+    snsWebSdkInstance.launch('#sumsub-websdk-container')
+}
+async function getNewAccessToken(stellar_key) {
+    const request =  await axios.get('http://localhost:5000/' + stellar_key)
+    return request.data.access_token
+}
 </script>
 </html>
