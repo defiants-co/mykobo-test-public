@@ -86,9 +86,9 @@ def index():
 def create_transfer():
     return render_template('init_workflow.html')
 
-@app.route('/kyc')
-def kyc():
-    return render_template('kyc_workflow.html')
+# @app.route('/kyc')
+# def kyc():
+#     return render_template('kyc_workflow.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
